@@ -434,8 +434,12 @@ public class TableOutput extends BaseStep implements StepInterface {
   private void processBatchException( String errorMessage, int[] updateCounts, List<Exception> exceptionsList ) throws KettleException {
     // There was an error with the commit
     // We should put all the failing rows out there...
-    //
-    if ( updateCounts != null ) {
+		/**
+		 * In practice, it is found that in some cases the updateCounts return an int [0].
+		 *  When this happens, the following code will not record exception information. 
+		 *  So the condition ‘&& updateCounts. length > 0’ is added.
+		 */
+    if ( updateCounts != null && updateCounts.length > 0) {
       int errNr = 0;
       for ( int i = 0; i < updateCounts.length; i++ ) {
         Object[] row = data.batchBuffer.get( i );
@@ -456,7 +460,6 @@ public class TableOutput extends BaseStep implements StepInterface {
     } else {
       // If we don't have update counts, it probably means the DB doesn't support it.
       // In this case we don't have a choice but to consider all inserted rows to be error rows.
-      //
       for ( int i = 0; i < data.batchBuffer.size(); i++ ) {
         Object[] row = data.batchBuffer.get( i );
         putError( data.outputRowMeta, row, 1L, errorMessage, null, "TOP0003" );
